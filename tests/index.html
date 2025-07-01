@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniJS Framework - Test Suite</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .test-result.pass {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .test-result.fail {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .test-result.pending {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 MiniJS Framework Test Suite</h1>
+        
+        <div id="test-results">
+            <h3>Test Results</h3>
+            <div id="test-output">
+                <p><em>Running tests...</em></p>
+            </div>
+        </div>
+        
+        <div id="test-summary">
+            <h3>Summary</h3>
+            <p>Tests will be implemented as framework modules are completed.</p>
+        </div>
+    </div>
+
+    <!-- Load Framework -->
+    <script src="../src/index.js"></script>
+    
+    <!-- Test Runner -->
+    <script>
+        // Simple test runner for MiniJS Framework
+        const TestRunner = {
+            tests: [],
+            results: [],
+            
+            test: function(name, testFn) {
+                this.tests.push({ name, testFn });
+            },
+            
+            run: function() {
+                const output = document.getElementById('test-output');
+                output.innerHTML = '';
+                
+                this.tests.forEach(test => {
+                    try {
+                        const result = test.testFn();
+                        this.addResult(test.name, result, null);
+                    } catch (error) {
+                        this.addResult(test.name, false, error.message);
+                    }
+                });
+                
+                this.showSummary();
+            },
+            
+            addResult: function(name, passed, error) {
+                const output = document.getElementById('test-output');
+                const div = document.createElement('div');
+                div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+                div.innerHTML = `
+                    <strong>${passed ? '✅' : '❌'} ${name}</strong>
+                    ${error ? `<br><small>Error: ${error}</small>` : ''}
+                `;
+                output.appendChild(div);
+                
+                this.results.push({ name, passed, error });
+            },
+            
+            showSummary: function() {
+                const summary = document.getElementById('test-summary');
+                const passed = this.results.filter(r => r.passed).length;
+                const total = this.results.length;
+                
+                summary.innerHTML = `
+                    <h3>Summary</h3>
+                    <p><strong>${passed}/${total}</strong> tests passed</p>
+                `;
+            }
+        };
+        
+        // Basic framework tests
+        TestRunner.test('Framework loads', function() {
+            return typeof MiniJS !== 'undefined';
+        });
+        
+        TestRunner.test('Framework has version', function() {
+            return MiniJS.version === '1.0.0';
+        });
+        
+        TestRunner.test('Framework has getInfo method', function() {
+            const info = MiniJS.getInfo();
+            return info && info.name === 'MiniJS Framework';
+        });
+        
+        TestRunner.test('Framework modules structure exists', function() {
+            return MiniJS.hasOwnProperty('core') && 
+                   MiniJS.hasOwnProperty('dom') && 
+                   MiniJS.hasOwnProperty('events') && 
+                   MiniJS.hasOwnProperty('state') && 
+                   MiniJS.hasOwnProperty('routing');
+        });
+        
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => TestRunner.run(), 100);
+        });
+    </script>
+</body>
+</html>

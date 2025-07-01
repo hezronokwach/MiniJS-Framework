@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniJS Framework - Development Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        #framework-test {
+            min-height: 100px;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            margin: 10px 0;
+            background: white;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.loading {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 MiniJS Framework</h1>
+        <p><strong>Development Test Page</strong></p>
+        
+        <div class="test-section">
+            <h3>Framework Status</h3>
+            <div id="framework-status" class="status loading">
+                Loading MiniJS Framework...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Framework Test Area</h3>
+            <div id="framework-test">
+                <!-- Framework components will be rendered here -->
+                <p><em>Waiting for framework to load...</em></p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Development Links</h3>
+            <ul>
+                <li><a href="examples/todomvc/index.html">TodoMVC Example</a></li>
+                <li><a href="docs/README.md">Framework Documentation</a></li>
+                <li><a href="tests/">Test Suite</a></li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>Framework Modules</h3>
+            <ul id="module-status">
+                <li>Core Framework: <span id="core-status">Not loaded</span></li>
+                <li>DOM Abstraction: <span id="dom-status">Not loaded</span></li>
+                <li>Event System: <span id="events-status">Not loaded</span></li>
+                <li>State Management: <span id="state-status">Not loaded</span></li>
+                <li>Routing System: <span id="routing-status">Not loaded</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Framework Scripts -->
+    <script src="src/index.js"></script>
+    
+    <!-- Development Test Script -->
+    <script>
+        // Basic framework loading test
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusEl = document.getElementById('framework-status');
+            const testArea = document.getElementById('framework-test');
+            
+            // Check if MiniJS framework is available
+            if (typeof MiniJS !== 'undefined') {
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ MiniJS Framework loaded successfully!';
+                
+                // Test basic framework functionality
+                testArea.innerHTML = '<p><strong>Framework is ready for testing!</strong></p>';
+                
+                // Update module status
+                updateModuleStatus();
+            } else {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ MiniJS Framework failed to load. Check console for errors.';
+                
+                testArea.innerHTML = '<p><em>Framework not available. Please implement src/index.js</em></p>';
+            }
+        });
+        
+        function updateModuleStatus() {
+            const modules = ['core', 'dom', 'events', 'state', 'routing'];
+            modules.forEach(module => {
+                const statusEl = document.getElementById(`${module}-status`);
+                if (MiniJS && MiniJS[module]) {
+                    statusEl.textContent = '✅ Loaded';
+                    statusEl.style.color = 'green';
+                } else {
+                    statusEl.textContent = '⏳ Pending';
+                    statusEl.style.color = 'orange';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
