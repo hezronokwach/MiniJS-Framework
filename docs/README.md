@@ -135,27 +135,4 @@ npm test
 
 MIT License - see LICENSE file for details.
 
-## Roadmap
 
-### Phase 1: Core Framework (Current)
-- [x] Project structure setup
-- [ ] DOM abstraction layer
-- [ ] Event handling system
-- [ ] State management
-- [ ] Basic routing
-
-### Phase 2: TodoMVC Implementation
-- [ ] Complete TodoMVC application
-- [ ] All required functionality
-- [ ] Routing integration
-- [ ] Local storage persistence
-
-### Phase 3: Documentation & Polish
-- [ ] Complete API documentation
-- [ ] Code examples and tutorials
-- [ ] Performance optimizations
-- [ ] Code quality improvements
-
----
-
-*This documentation will be updated as framework modules are implemented.*
