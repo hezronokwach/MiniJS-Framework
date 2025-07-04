@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniJS DOM Module Verification Tests</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .test-pass { color: green; font-weight: bold; }
+        .test-fail { color: red; font-weight: bold; }
+        .test-result { margin: 5px 0; }
+        #test-container { border: 2px solid #007acc; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>MiniJS DOM Module Verification Tests</h1>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Visual Test Container</h2>
+        <div id="test-container"></div>
+    </div>
+
+    <!-- Load DOM Module Files -->
+    <script src="src/dom/element.js"></script>
+    <script src="src/dom/attributes.js"></script>
+    <script src="src/dom/manipulation.js"></script>
+    <script src="src/dom/render.js"></script>
+
+    <script>
+        // Test Results Container
+        const resultsContainer = document.getElementById('test-results');
+        const testContainer = document.getElementById('test-container');
+        let testCount = 0;
+        let passCount = 0;
+
+        function logTest(testName, passed, details = '') {
+            testCount++;
+            if (passed) passCount++;
+            
+            const result = document.createElement('div');
+            result.className = 'test-result';
+            result.innerHTML = `
+                <span class="${passed ? 'test-pass' : 'test-fail'}">
+                    ${passed ? '✅' : '❌'} Test ${testCount}: ${testName}
+                </span>
+                ${details ? `<br>&nbsp;&nbsp;&nbsp;&nbsp;${details}` : ''}
+            `;
+            resultsContainer.appendChild(result);
+            
+            console.log(`${passed ? '✅' : '❌'} ${testName}`, details);
+        }
+
+        function runVerificationTests() {
+            console.log('🧪 Starting DOM Module Verification Tests...');
+            
+            try {
+                // Test 1: Module Loading
+                logTest('Module Loading', 
+                    typeof window.MiniJSDOMElement !== 'undefined' &&
+                    typeof window.MiniJSDOMAttributes !== 'undefined' &&
+                    typeof window.MiniJSDOMManipulation !== 'undefined' &&
+                    typeof window.MiniJSDOMRender !== 'undefined',
+                    'All DOM modules loaded successfully'
+                );
+
+                // Test 2: Element Creation
+                const testDiv = window.MiniJSDOMElement.createElement('div', 
+                    { id: 'test-div', class: 'test-element' }, 
+                    'Test Content'
+                );
+                logTest('Element Creation', 
+                    testDiv && testDiv._isVirtualElement && testDiv.tag === 'div',
+                    `Created element with tag: ${testDiv.tag}, id: ${testDiv._id}`
+                );
+
+                // Test 3: Text Node Creation
+                const textNode = window.MiniJSDOMElement.createTextNode('Hello World');
+                logTest('Text Node Creation',
+                    textNode && textNode._isTextNode && textNode.text === 'Hello World',
+                    `Created text node: "${textNode.text}"`
+                );
+
+                // Test 4: Attribute Management
+                window.MiniJSDOMAttributes.setAttribute(testDiv, 'data-test', 'value123');
+                const attrValue = window.MiniJSDOMAttributes.getAttribute(testDiv, 'data-test');
+                logTest('Attribute Management',
+                    attrValue === 'value123',
+                    `Set and retrieved attribute: ${attrValue}`
+                );
+
+                // Test 5: CSS Class Management
+                window.MiniJSDOMAttributes.addClass(testDiv, 'active highlighted');
+                const hasActive = window.MiniJSDOMAttributes.hasClass(testDiv, 'active');
+                const hasHighlighted = window.MiniJSDOMAttributes.hasClass(testDiv, 'highlighted');
+                logTest('CSS Class Management',
+                    hasActive && hasHighlighted,
+                    `Classes added successfully: active=${hasActive}, highlighted=${hasHighlighted}`
+                );
+
+                // Test 6: Class Removal
+                window.MiniJSDOMAttributes.removeClass(testDiv, 'highlighted');
+                const stillHasHighlighted = window.MiniJSDOMAttributes.hasClass(testDiv, 'highlighted');
+                logTest('CSS Class Removal',
+                    !stillHasHighlighted && window.MiniJSDOMAttributes.hasClass(testDiv, 'active'),
+                    `Removed 'highlighted' class, kept 'active' class`
+                );
+
+                // Test 7: Style Management
+                window.MiniJSDOMAttributes.setStyle(testDiv, 'color', 'red');
+                window.MiniJSDOMAttributes.setStyle(testDiv, { 'font-size': '16px', 'margin': '10px' });
+                const colorStyle = window.MiniJSDOMAttributes.getStyle(testDiv, 'color');
+                logTest('Style Management',
+                    colorStyle === 'red',
+                    `Set multiple styles, retrieved color: ${colorStyle}`
+                );
+
+                // Test 8: Element Nesting
+                const button = window.MiniJSDOMElement.createElement('button', {
+                    onclick: () => alert('Button clicked from verification test!')
+                }, 'Click Me');
+                
+                window.MiniJSDOMManipulation.appendChild(testDiv, button);
+                const childCount = window.MiniJSDOMManipulation.getChildCount(testDiv);
+                logTest('Element Nesting',
+                    childCount === 2, // Original text + button
+                    `Parent has ${childCount} children after appendChild`
+                );
+
+                // Test 9: Child Manipulation
+                const span = window.MiniJSDOMElement.createElement('span', {}, 'Span Element');
+                window.MiniJSDOMManipulation.insertBefore(testDiv, span, button);
+                const newChildCount = window.MiniJSDOMManipulation.getChildCount(testDiv);
+                logTest('Child Insertion',
+                    newChildCount === 3,
+                    `Child count after insertBefore: ${newChildCount}`
+                );
+
+                // Test 10: Child Removal
+                window.MiniJSDOMManipulation.removeChild(testDiv, span);
+                const finalChildCount = window.MiniJSDOMManipulation.getChildCount(testDiv);
+                logTest('Child Removal',
+                    finalChildCount === 2,
+                    `Child count after removeChild: ${finalChildCount}`
+                );
+
+                // Test 11: Complex Structure Creation
+                const complexApp = window.MiniJSDOMElement.createElement('div', { class: 'app' }, [
+                    window.MiniJSDOMElement.createElement('h3', {}, 'Verification Test App'),
+                    window.MiniJSDOMElement.createElement('p', { 
+                        style: 'color: blue; font-style: italic;' 
+                    }, 'This is a complex nested structure test.'),
+                    testDiv,
+                    window.MiniJSDOMElement.createElement('footer', {}, 'Test completed successfully!')
+                ]);
+                logTest('Complex Structure Creation',
+                    window.MiniJSDOMManipulation.getChildCount(complexApp) === 4,
+                    `Complex app has ${window.MiniJSDOMManipulation.getChildCount(complexApp)} children`
+                );
+
+                // Test 12: Rendering to DOM
+                window.MiniJSDOMRender.render(complexApp, testContainer);
+                const renderedElements = testContainer.querySelectorAll('*');
+                logTest('DOM Rendering',
+                    renderedElements.length > 0 && testContainer.querySelector('h3'),
+                    `Rendered ${renderedElements.length} DOM elements`
+                );
+
+                // Test 13: Event Handling (will be verified manually)
+                logTest('Event Handling Setup',
+                    testContainer.querySelector('button') !== null,
+                    'Button with click handler rendered (click to verify)'
+                );
+
+                // Test 14: Text Content Rendering
+                const h3Element = testContainer.querySelector('h3');
+                logTest('Text Content Rendering',
+                    h3Element && h3Element.textContent === 'Verification Test App',
+                    `H3 text content: "${h3Element ? h3Element.textContent : 'not found'}"`
+                );
+
+                // Test 15: Attribute Rendering
+                const pElement = testContainer.querySelector('p');
+                logTest('Attribute Rendering',
+                    pElement && pElement.style.color === 'blue',
+                    `P element style.color: ${pElement ? pElement.style.color : 'not found'}`
+                );
+
+                // Final Summary
+                const successRate = Math.round((passCount / testCount) * 100);
+                const summaryDiv = document.createElement('div');
+                summaryDiv.style.cssText = 'margin-top: 20px; padding: 15px; background: #f0f8ff; border: 2px solid #007acc;';
+                summaryDiv.innerHTML = `
+                    <h3>Test Summary</h3>
+                    <p><strong>Tests Passed:</strong> ${passCount}/${testCount} (${successRate}%)</p>
+                    <p><strong>Status:</strong> ${successRate === 100 ? '🎉 All tests passed! DOM module is stable.' : '⚠️ Some tests failed. Review above.'}</p>
+                `;
+                resultsContainer.appendChild(summaryDiv);
+
+                console.log(`🎯 Verification Complete: ${passCount}/${testCount} tests passed (${successRate}%)`);
+
+            } catch (error) {
+                logTest('Error Handling', false, `Unexpected error: ${error.message}`);
+                console.error('❌ Verification failed with error:', error);
+            }
+        }
+
+        // Run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(runVerificationTests, 100);
+        });
+    </script>
+</body>
+</html>
