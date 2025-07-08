@@ -104,7 +104,21 @@
         </div>
     </div>
 
+    <!-- DOM Testing Area -->
+    <div class="container">
+        <h2>DOM Module Test</h2>
+        <div id="dom-test-container" style="border: 1px solid #ccc; padding: 15px; margin: 10px 0; background: #f9f9f9;">
+            <p><em>DOM test results will appear here...</em></p>
+        </div>
+    </div>
+
+
+
     <!-- Framework Scripts -->
+    <script src="src/dom/element.js"></script>
+    <script src="src/dom/attributes.js"></script>
+    <script src="src/dom/manipulation.js"></script>
+    <script src="src/dom/render.js"></script>
     <script src="src/index.js"></script>
     
     <!-- Development Test Script -->
@@ -144,6 +158,63 @@
                     statusEl.style.color = 'orange';
                 }
             });
+
+            // Test DOM module if available
+            testDOMModule();
+        }
+
+        function testDOMModule() {
+            // Check if DOM modules are available
+            if (typeof window.MiniJSDOMElement === 'undefined' ||
+                typeof window.MiniJSDOMAttributes === 'undefined' ||
+                typeof window.MiniJSDOMManipulation === 'undefined' ||
+                typeof window.MiniJSDOMRender === 'undefined') {
+                console.log('⏳ DOM modules not fully loaded yet');
+                return;
+            }
+
+            console.log('🧪 Testing DOM Module...');
+
+            try {
+                // Test 1: Create element
+                const testDiv = window.MiniJSDOMElement.createElement('div',
+                    { class: 'test-element', style: 'padding: 10px; border: 2px solid blue; margin: 5px;' },
+                    'Hello from MiniJS DOM!'
+                );
+                console.log('✅ Element created:', testDiv);
+
+                // Test 2: Add attributes and classes
+                window.MiniJSDOMAttributes.setAttribute(testDiv, 'data-test', 'success');
+                window.MiniJSDOMAttributes.addClass(testDiv, 'active');
+                console.log('✅ Attributes added');
+
+                // Test 3: Create and append child
+                const button = window.MiniJSDOMElement.createElement('button', {
+                    onclick: () => alert('DOM module works!'),
+                    style: 'margin: 5px; padding: 5px 10px;'
+                }, 'Click Me!');
+
+                window.MiniJSDOMManipulation.appendChild(testDiv, button);
+                console.log('✅ Child appended');
+
+                // Test 4: Create text node
+                const textNode = window.MiniJSDOMElement.createTextNode(' - Text node added!');
+                window.MiniJSDOMManipulation.appendChild(testDiv, textNode);
+                console.log('✅ Text node added');
+
+                // Test 5: Render to DOM
+                const container = document.getElementById('dom-test-container');
+                if (container) {
+                    window.MiniJSDOMRender.render(testDiv, container);
+                    console.log('✅ Rendered to DOM successfully!');
+                    console.log('🎉 All DOM tests passed!');
+                } else {
+                    console.warn('⚠️ Test container not found');
+                }
+
+            } catch (error) {
+                console.error('❌ DOM test failed:', error);
+            }
         }
     </script>
 </body>

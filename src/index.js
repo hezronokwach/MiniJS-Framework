@@ -14,10 +14,10 @@
      */
     const MiniJS = {
         version: '1.0.0',
-        
-        // Core modules (to be implemented)
+
+        // Core modules
         core: null,
-        dom: null,
+        dom: null, // Will be initialized with DOM module
         events: null,
         state: null,
         routing: null,
@@ -25,14 +25,14 @@
         // Framework initialization
         init: function() {
             console.log('🚀 MiniJS Framework v' + this.version + ' initializing...');
-            
+
             // Initialize core modules when they're implemented
             if (this.core) this.core.init();
             if (this.dom) this.dom.init();
             if (this.events) this.events.init();
             if (this.state) this.state.init();
             if (this.routing) this.routing.init();
-            
+
             console.log('✅ MiniJS Framework initialized successfully!');
             return this;
         },
