@@ -20,7 +20,7 @@
         dom: null, // Will be initialized with DOM module
         events: null,
         state: null,
-        routing: null,
+        routing: (typeof require === 'function' ? require('./routing/router.js') : (window && window.MiniJS && window.MiniJS.routing) ? window.MiniJS.routing : null),
         
         // Framework initialization
         init: function() {

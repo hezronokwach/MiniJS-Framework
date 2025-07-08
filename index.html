@@ -118,6 +118,7 @@
     <script src="src/dom/element.js"></script>
     <script src="src/dom/attributes.js"></script>
     <script src="src/dom/manipulation.js"></script>
+    <script src="src/routing/router.js"></script>
     <script src="src/dom/render.js"></script>
     <script src="src/index.js"></script>
     
@@ -216,6 +217,19 @@
                 console.error('❌ DOM test failed:', error);
             }
         }
+
+        MiniJS.routing.registerRoute('all', function(route) {
+          console.log('All route activated:', route);
+        });
+        MiniJS.routing.registerRoute('active', function(route) {
+          console.log('Active route activated:', route);
+        });
+        MiniJS.routing.registerRoute('completed', function(route) {
+          console.log('Completed route activated:', route);
+        });
+
+        MiniJS.routing.navigateTo('active'); // URL changes to #active, logs "Active route activated: active"
+        MiniJS.routing.navigateTo('completed'); // URL changes to #completed, logs "Completed route activated: completed"
     </script>
 </body>
 </html>
