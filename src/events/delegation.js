@@ -85,4 +85,29 @@ export class EventDelegation {
         });
     }
 
+    saveTodoEdit(event) {
+        const input = event.currentTarget;
+        const todoItem = input.closest('.todo-item');
+        const todoId = todoItem.dataset.id;
+        const newText = input.value.trim();
+
+        if (newText) {
+            event.updateState({
+                todos: {
+                    [todoId]: { text: newText }
+                }
+            });
+        }
+
+        todoItem.classList.remove('editing');
+    }
+
+    cancelTodoEdit(event) {
+        const input = event.currentTarget;
+        const todoItem = input.closest('.todo-item');
+        const originalText = todoItem.querySelector('.todo-text').textContent;
+
+        input.value = originalText;
+        todoItem.classList.remove('editing');
+    }
 }
