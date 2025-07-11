@@ -65,11 +65,63 @@ Returns framework information including version and module status.
 - Reactive updates
 - Local storage persistence
 
-### Routing (Coming Soon)
-- Hash-based routing
+### Routing
+- Hash-based routing for single-page applications
 - Route registration and matching
-- Navigation functions
+- Navigation functions (navigateTo, back, forward)
+- Route change event handling
+- Integration with state management
 - Browser history support
+
+#### Overview
+The MiniJS Routing module provides a simple, hash-based routing system for single-page applications. It synchronizes application state with URL changes, enabling navigation between views (e.g., TodoMVC filters: All, Active, Completed) without page reloads.
+
+#### API
+- `MiniJS.routing.registerRoute(path, handler)`
+  - Register a route and its handler function. The handler is called when the route is activated.
+- `MiniJS.routing.navigateTo(path)`
+  - Programmatically navigate to a route (updates the URL hash and triggers the handler).
+- `MiniJS.routing.back()`
+  - Navigate back in browser history.
+- `MiniJS.routing.forward()`
+  - Navigate forward in browser history.
+- `MiniJS.routing.setRouteChangeListener(fn)`
+  - Set a callback to be called on any route change (for integration with state/UI updates).
+- `MiniJS.routing.getCurrentRoute()`
+  - Get the current active route (string).
+
+#### Usage Example
+```js
+// Register routes
+MiniJS.routing.registerRoute('all', function(route) {
+  // Show all items
+});
+MiniJS.routing.registerRoute('active', function(route) {
+  // Show active items
+});
+MiniJS.routing.registerRoute('completed', function(route) {
+  // Show completed items
+});
+
+// Navigate programmatically
+MiniJS.routing.navigateTo('active'); // URL becomes #active
+
+// Listen for route changes (integration with state/UI)
+MiniJS.routing.setRouteChangeListener(function(route) {
+  // Update UI or state based on route
+});
+```
+
+#### Integration
+- **State Management:** Use `setRouteChangeListener` to update application state or UI when the route changes.
+- **Browser Navigation:** The router supports browser back/forward buttons and updates the view accordingly.
+- **Initial Load:** The correct route handler is called on page load based on the URL hash.
+
+#### Acceptance Criteria
+- URL changes when navigating (e.g., clicking All/Active/Completed in TodoMVC)
+- Browser back/forward works correctly
+- Page loads with the correct filter/view based on the URL
+- State/UI updates when the route changes
 
 ## Examples
 

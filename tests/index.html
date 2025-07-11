@@ -59,6 +59,8 @@
 
     <!-- Load Framework -->
     <script src="../src/index.js"></script>
+    <!-- Explicitly load routing module -->
+    <script src="../src/routing/router.js"></script>
     
     <!-- Test Runner -->
     <script>
@@ -132,6 +134,82 @@
                    MiniJS.hasOwnProperty('events') && 
                    MiniJS.hasOwnProperty('state') && 
                    MiniJS.hasOwnProperty('routing');
+        });
+        
+        // Routing tests
+        TestRunner.test('Routing: register and trigger route', function() {
+            return new Promise(resolve => {
+                let triggered = false;
+                MiniJS.routing.registerRoute('testroute', function(route) {
+                    if (route === 'testroute') triggered = true;
+                });
+                MiniJS.routing.navigateTo('testroute');
+                setTimeout(() => {
+                    resolve(triggered && window.location.hash === '#testroute');
+                }, 100);
+            });
+        });
+
+        TestRunner.test('Routing: navigate to all/active/completed', function() {
+            return new Promise(resolve => {
+                let called = [];
+                MiniJS.routing.registerRoute('all', function() { called.push('all'); });
+                MiniJS.routing.registerRoute('active', function() { called.push('active'); });
+                MiniJS.routing.registerRoute('completed', function() { called.push('completed'); });
+                MiniJS.routing.navigateTo('all');
+                setTimeout(() => {
+                    MiniJS.routing.navigateTo('active');
+                    setTimeout(() => {
+                        MiniJS.routing.navigateTo('completed');
+                        setTimeout(() => {
+                            resolve(called.includes('all') && called.includes('active') && called.includes('completed'));
+                        }, 100);
+                    }, 100);
+                }, 100);
+            });
+        });
+
+        TestRunner.test('Routing: back/forward navigation', function() {
+            MiniJS.routing.navigateTo('all');
+            MiniJS.routing.navigateTo('active');
+            MiniJS.routing.back();
+            // Wait for hashchange event to propagate
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    resolve(window.location.hash === '#all');
+                }, 150);
+            });
+        });
+
+        TestRunner.test('Routing: setRouteChangeListener', function() {
+            return new Promise(resolve => {
+                let changed = false;
+                MiniJS.routing.setRouteChangeListener(function(route) {
+                    if (route === 'all') changed = true;
+                });
+                // Force a different route first to guarantee a change
+                MiniJS.routing.navigateTo('active');
+                setTimeout(() => {
+                    MiniJS.routing.navigateTo('all');
+                    setTimeout(() => {
+                        resolve(changed);
+                    }, 100);
+                }, 100);
+            });
+        });
+
+        TestRunner.test('Routing: initial route on load', function() {
+            // Simulate initial load with hash
+            window.location.hash = '#completed';
+            let triggered = false;
+            MiniJS.routing.registerRoute('completed', function(route) {
+                if (route === 'completed') triggered = true;
+            });
+            // Manually trigger route change handler
+            if (typeof MiniJS.routing.getCurrentRoute === 'function') {
+                MiniJS.routing.navigateTo('completed');
+            }
+            return triggered && window.location.hash === '#completed';
         });
         
         // Run tests when page loads
