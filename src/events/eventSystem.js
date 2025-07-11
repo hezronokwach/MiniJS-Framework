@@ -137,7 +137,42 @@ class EventSystem {
         };
     }
 
-    
+    handleStateUpdate(stateUpdate) {
+        if (this.stateManager) {
+            if (typeof this.stateManager.setState === 'function') {
+                this.stateManager.setState(stateUpdate);
+            } else if (typeof this.stateManager.update === 'function') {
+                this.stateManager.update(stateUpdate);
+            }
+        }
+    }
+
+    getElementId(element) {
+        if (!element._miniJSEventId) {
+            element._miniJSEventId = 'el_' + Math.random().toString(36).substr(2, 9);
+        }
+        return element._miniJSEventId;
+    }
+
+    normalizeEventType(eventType) {
+        return eventType.startsWith('on') ? eventType.substring(2).toLowerCase() : eventType.toLowerCase();
+    }
+
+    unbind(element, eventType = null) {
+        const elementData = this.elementRegistry.get(element);
+        if (!elementData) return;
+
+        if (eventType) {
+            elementData.events.delete(this.normalizeEventType(eventType));
+        } else {
+            elementData.events.clear();
+        }
+
+        if (elementData.events.size === 0) {
+            this.eventHandlers.delete(elementData.id);
+            this.elementRegistry.delete(element);
+        }
+    }
 
     cleanup(element) {
         this.unbind(element);
