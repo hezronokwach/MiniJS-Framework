@@ -42,4 +42,47 @@ export class EventDelegation {
         }
     }
 
+    // TodoMVC specific delegation
+    delegateTodoEvents(container) {
+        // Toggle todo completion
+        this.delegate(container, '.todo-toggle', 'change', (event) => {
+            const todoId = event.currentTarget.closest('.todo-item').dataset.id;
+            return event.updateState({
+                todos: {
+                    [todoId]: { completed: event.currentTarget.checked }
+                }
+            });
+        });
+
+        // Start editing todo
+        this.delegate(container, '.todo-text', 'dblclick', (event) => {
+            const todoItem = event.currentTarget.closest('.todo-item');
+            todoItem.classList.add('editing');
+            const input = todoItem.querySelector('.todo-edit');
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        });
+
+        // Delete todo
+        this.delegate(container, '.todo-destroy', 'click', (event) => {
+            const todoId = event.currentTarget.closest('.todo-item').dataset.id;
+            return event.updateState({ deleteTodo: todoId });
+        });
+
+        // Save todo edit
+        this.delegate(container, '.todo-edit', 'blur', (event) => {
+            this.saveTodoEdit(event);
+        });
+
+        this.delegate(container, '.todo-edit', 'keydown', (event) => {
+            if (event.key === 'Enter') {
+                this.saveTodoEdit(event);
+            } else if (event.key === 'Escape') {
+                this.cancelTodoEdit(event);
+            }
+        });
+    }
+
 }
