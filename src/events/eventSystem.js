@@ -91,6 +91,52 @@ class EventSystem {
         }
     }
 
+    wrapHandler(handler, element) {
+        return (event) => {
+            const enhancedEvent = this.createEnhancedEvent(event, element);
+            const result = handler.call(element, enhancedEvent);
+
+            if (result && typeof result === 'object' && result.stateUpdate) {
+                this.handleStateUpdate(result.stateUpdate);
+            }
+
+            return result;
+        };
+    }
+
+    createEnhancedEvent(event, element) {
+        return {
+            ...event,
+            originalEvent: event,
+            preventDefault: () => event.preventDefault(),
+            stopPropagation: () => event.stopPropagation(),
+            currentTarget: element,
+
+            updateState: (stateUpdate) => {
+                if (this.stateManager) {
+                    this.stateManager.setState(stateUpdate);
+                }
+                return { stateUpdate };
+            },
+
+            getState: (key) => {
+                if (this.stateManager) {
+                    return key ? this.stateManager.getState(key) : this.stateManager.getState();
+                }
+                return null;
+            },
+
+            getValue: () => element.value || element.textContent,
+            setValue: (value) => {
+                if ('value' in element) {
+                    element.value = value;
+                } else {
+                    element.textContent = value;
+                }
+            }
+        };
+    }
+
     
 
     cleanup(element) {
