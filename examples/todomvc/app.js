@@ -7,6 +7,35 @@
 
     // Wait for MiniJS framework to be ready
     document.addEventListener('DOMContentLoaded', function() {
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Reset app (Ctrl+Alt+R)
+            if (e.ctrlKey && e.altKey && e.key === 'r') {
+                e.preventDefault();
+                if (typeof resetApp === 'function') {
+                    resetApp();
+                    console.log('App reset triggered by keyboard shortcut (Ctrl+Alt+R)');
+                }
+            }
+            
+            // Export todos (Ctrl+Alt+E)
+            if (e.ctrlKey && e.altKey && e.key === 'e') {
+                e.preventDefault();
+                if (typeof exportTodos === 'function') {
+                    exportTodos();
+                    console.log('Todos export triggered by keyboard shortcut (Ctrl+Alt+E)');
+                }
+            }
+            
+            // Show help (F1 or ?)
+            if (e.key === 'F1' || (e.key === '?' && !e.ctrlKey && !e.altKey && !e.shiftKey)) {
+                e.preventDefault();
+                if (typeof showHelp === 'function') {
+                    showHelp();
+                    console.log('Help dialog triggered by keyboard shortcut');
+                }
+            }
+        });
         console.log('📝 TodoMVC App initializing...');
         
         if (typeof MiniJS === 'undefined') {
@@ -26,6 +55,13 @@
      * Initialize the TodoMVC application
      */
     function initApp() {
+        // Check if localStorage is available
+        if (typeof isStorageAvailable === 'function') {
+            const storageAvailable = isStorageAvailable();
+            if (!storageAvailable) {
+                console.warn('localStorage is not available, state will not persist');
+            }
+        }
         // Check if all required modules are loaded
         if (!window.MiniJSDOM || !window.MiniJSEvents || !window.MiniJSState || !window.MiniJS.routing) {
             console.error('❌ Required modules not loaded!');
@@ -45,6 +81,13 @@
         
         // Render initial UI
         renderApp();
+        
+        // Verify TodoMVC structure
+        setTimeout(() => {
+            if (typeof verifyTodoMVCStructure === 'function') {
+                verifyTodoMVCStructure();
+            }
+        }, 500);
     }
 
     /**
@@ -53,21 +96,79 @@
     function initState() {
         const state = window.MiniJSState;
         
-        // If state is empty, initialize with default todos
-        if (Object.keys(state.getState().todos).length === 0) {
+        // Try to load todos from localStorage first
+        let todosLoaded = false;
+        if (typeof loadTodosFromStorage === 'function') {
+            const savedTodos = loadTodosFromStorage();
+            if (savedTodos && Object.keys(savedTodos).length > 0) {
+                // Calculate next ID based on highest existing ID
+                const ids = Object.keys(savedTodos).map(id => parseInt(id));
+                const nextId = Math.max(...ids) + 1;
+                
+                state.setState({
+                    todos: savedTodos,
+                    nextId: nextId,
+                    filter: 'all',
+                    editingId: null
+                });
+                todosLoaded = true;
+                console.log(`Loaded ${Object.keys(savedTodos).length} todos from localStorage`);
+                
+                if (typeof showNotification === 'function') {
+                    showNotification('Todos loaded from localStorage', 'info');
+                }
+            }
+        }
+        
+        // If no todos were loaded, initialize with default todos
+        if (!todosLoaded && Object.keys(state.getState().todos).length === 0) {
             state.setState({
                 todos: {
-                    1: { id: 1, title: 'Learn MiniJS Framework', completed: false },
-                    2: { id: 2, title: 'Build TodoMVC app', completed: false },
-                    3: { id: 3, title: 'Master JavaScript', completed: true }
+                    1: { id: 1, title: 'Learn MiniJS Framework', completed: false, createdAt: Date.now() },
+                    2: { id: 2, title: 'Build TodoMVC app', completed: false, createdAt: Date.now() + 100 },
+                    3: { id: 3, title: 'Master JavaScript', completed: true, createdAt: Date.now() + 200, completedAt: Date.now() + 300 }
                 },
-                nextId: 4
+                nextId: 4,
+                filter: 'all',
+                editingId: null
             });
         }
         
         // Subscribe to state changes
-        state.subscribe(function(newState) {
+        state.subscribe(function(newState, prevState, actionType) {
+            // Render todos on any state change
             renderTodos(newState.todos);
+            
+            // Log state changes for debugging
+            if (actionType !== 'SET_STATE') {
+                console.log(`State updated: ${actionType}`);
+                
+                // Save todos to localStorage
+                if (typeof saveTodosToStorage === 'function') {
+                    saveTodosToStorage(newState.todos);
+                }
+                
+                // Show notifications for certain actions
+                if (typeof showNotification === 'function') {
+                    switch (actionType) {
+                        case 'ADD_TODO':
+                            showNotification('Todo added', 'success');
+                            break;
+                        case 'DELETE_TODO':
+                            showNotification('Todo deleted', 'info');
+                            break;
+                        case 'EDIT_TODO':
+                            showNotification('Todo updated', 'success');
+                            break;
+                        case 'TOGGLE_TODO':
+                            showNotification('Todo status changed', 'info');
+                            break;
+                        case 'CLEAR_COMPLETED':
+                            showNotification('Completed todos cleared', 'info');
+                            break;
+                    }
+                }
+            }
         });
     }
 
@@ -228,9 +329,32 @@
             setFilter('completed');
         });
         
+        // Add route change listener
+        router.setRouteChangeListener(function(route) {
+            console.log(`Route changed to: ${route}`);
+        });
+        
+        // Handle filter links clicks
+        const filterLinks = document.querySelectorAll('.filters a');
+        filterLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const filter = this.getAttribute('href').replace('#/', '');
+                router.navigateTo(filter);
+            });
+        });
+        
         // Default route
         if (!window.location.hash) {
             router.navigateTo('all');
+        } else {
+            // Handle initial route from URL
+            const initialRoute = window.location.hash.replace('#/', '');
+            if (['all', 'active', 'completed'].includes(initialRoute)) {
+                setFilter(initialRoute);
+            } else {
+                router.navigateTo('all');
+            }
         }
     }
 
@@ -240,19 +364,29 @@
      */
     function setFilter(filter) {
         const state = window.MiniJSState;
-        state.setState({ filter: filter });
+        const currentFilter = state.getState().filter;
         
-        // Update filter UI
-        const filters = document.querySelectorAll('.filters a');
-        filters.forEach(a => {
-            a.classList.remove('selected');
-            if (a.getAttribute('href') === '#/' + filter) {
-                a.classList.add('selected');
-            }
-        });
-        
-        // Re-render todos with filter
-        renderTodos(state.getState().todos);
+        // Only update if filter changed
+        if (filter !== currentFilter) {
+            state.setState({ filter: filter }, 'SET_FILTER');
+            
+            // Update filter UI
+            const filters = document.querySelectorAll('.filters a');
+            filters.forEach(a => {
+                a.classList.remove('selected');
+                if (a.getAttribute('href') === '#/' + filter) {
+                    a.classList.add('selected');
+                }
+            });
+            
+            // Update document title to reflect current filter
+            document.title = `TodoMVC - ${filter.charAt(0).toUpperCase() + filter.slice(1)}`;
+            
+            // Re-render todos with filter
+            renderTodos(state.getState().todos);
+            
+            console.log(`Filter changed to: ${filter}`);
+        }
     }
 
     /**
@@ -364,7 +498,20 @@
         // Update todo count
         const todoCountElement = document.querySelector('.todo-count');
         if (todoCountElement) {
+            // Check if count changed to add animation
+            const currentCount = todoCountElement.querySelector('strong');
+            const countChanged = currentCount && parseInt(currentCount.textContent) !== activeCount;
+            
+            // Update the count
             todoCountElement.innerHTML = `<strong>${activeCount}</strong> item${activeCount !== 1 ? 's' : ''} left`;
+            
+            // Add animation class if count changed
+            if (countChanged) {
+                todoCountElement.classList.add('changed');
+                setTimeout(() => {
+                    todoCountElement.classList.remove('changed');
+                }, 500);
+            }
         }
         
         // Show/hide clear completed button
@@ -455,9 +602,12 @@
         
         if (!todo) return;
         
+        const newCompleted = !todo.completed;
+        
         const updatedTodo = {
             ...todo,
-            completed: !todo.completed
+            completed: newCompleted,
+            completedAt: newCompleted ? Date.now() : null
         };
         
         const newTodos = { ...currentState.todos };
@@ -465,7 +615,9 @@
         
         state.setState({
             todos: newTodos
-        });
+        }, 'TOGGLE_TODO');
+        
+        console.log(`Todo ${newCompleted ? 'completed' : 'marked active'}: "${todo.title}" (ID: ${id})`);
     }
 
     /**
@@ -477,16 +629,26 @@
         const currentState = state.getState();
         const newTodos = { ...currentState.todos };
         
+        // Count how many we're changing
+        let changedCount = 0;
+        const timestamp = Date.now();
+        
         Object.keys(newTodos).forEach(id => {
-            newTodos[id] = {
-                ...newTodos[id],
-                completed: completed
-            };
+            if (newTodos[id].completed !== completed) {
+                changedCount++;
+                newTodos[id] = {
+                    ...newTodos[id],
+                    completed: completed,
+                    completedAt: completed ? timestamp : null
+                };
+            }
         });
         
         state.setState({
             todos: newTodos
-        });
+        }, 'TOGGLE_ALL');
+        
+        console.log(`Toggled ${changedCount} todo${changedCount !== 1 ? 's' : ''} to ${completed ? 'completed' : 'active'}`);
     }
 
     /**
@@ -496,13 +658,34 @@
     function deleteTodo(id) {
         const state = window.MiniJSState;
         const currentState = state.getState();
-        const newTodos = { ...currentState.todos };
+        const todo = currentState.todos[id];
         
+        if (!todo) return;
+        
+        const newTodos = { ...currentState.todos };
         delete newTodos[id];
         
-        state.setState({
+        // If we're deleting the todo being edited, clear editing state
+        const newState = {
             todos: newTodos
-        });
+        };
+        
+        if (currentState.editingId === id) {
+            newState.editingId = null;
+        }
+        
+        state.setState(newState, 'DELETE_TODO');
+        
+        // Add a visual effect for deletion
+        const li = document.querySelector(`li[data-id="${id}"]`);
+        if (li) {
+            li.classList.add('deleting');
+            setTimeout(() => {
+                li.remove();
+            }, 300); // Match this with CSS animation duration
+        }
+        
+        console.log(`Todo deleted: "${todo.title}" (ID: ${id})`);
     }
 
     /**
@@ -513,15 +696,33 @@
         const currentState = state.getState();
         const newTodos = { ...currentState.todos };
         
+        // Count how many we're removing for logging
+        let removedCount = 0;
+        
+        // Add visual effect for deletion
         Object.keys(newTodos).forEach(id => {
             if (newTodos[id].completed) {
+                const li = document.querySelector(`li[data-id="${id}"]`);
+                if (li) {
+                    li.classList.add('deleting');
+                }
                 delete newTodos[id];
+                removedCount++;
             }
         });
         
-        state.setState({
+        // If we're deleting the todo being edited, clear editing state
+        const newState = {
             todos: newTodos
-        });
+        };
+        
+        if (currentState.editingId && !newTodos[currentState.editingId]) {
+            newState.editingId = null;
+        }
+        
+        state.setState(newState, 'CLEAR_COMPLETED');
+        
+        console.log(`Cleared ${removedCount} completed todo${removedCount !== 1 ? 's' : ''}`);
     }
 
     /**
