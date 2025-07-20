@@ -9,12 +9,16 @@
     <link rel="stylesheet" href="edit-animations.css">
     <link rel="stylesheet" href="edit-tooltip.css">
     <link rel="stylesheet" href="animations-extra.css">
+    <link rel="stylesheet" href="edit-indicator.css">
+    <link rel="stylesheet" href="input-enhancements.css">
 </head>
 <body>
     <section class="todoapp">
         <header class="header">
             <h1>todos</h1>
-            <input class="new-todo" placeholder="What needs to be done? (Press Enter to add)" autofocus>
+            <input class="new-todo" placeholder="What needs to be done? (Press Enter to add)" autofocus
+                   onkeydown="if(event.key === 'Enter' && this.value.trim()) { if(typeof addTodo === 'function') { addTodo(this.value.trim()); this.value = ''; event.preventDefault(); } }">
+            <span class="sr-only">Press Enter to add a new todo</span>
         </header>
         
         <!-- This section should be hidden by default and shown when there are todos -->
@@ -63,7 +67,7 @@
                 </li>
             </ul>
             <!-- Hidden if no completed items are left ↓ -->
-            <button class="clear-completed hidden">Clear completed</button>
+            <button class="clear-completed hidden" onclick="if(typeof clearCompletedTodos === 'function') { clearCompletedTodos(); return false; }">Clear completed</button>
         </footer>
     </section>
     
@@ -88,6 +92,10 @@
     <script src="../../src/state/simple-state.js"></script>
     <script src="../../src/routing/router.js"></script>
     
+    <!-- Emergency fixes -->
+    <script src="emergency-toggle-fix.js"></script>
+    <script src="direct-edit-fix.js"></script>
+    
     <!-- TodoMVC Application -->
     <script src="structure-verification.js"></script>
     <script src="storage-check.js"></script>
@@ -96,6 +104,13 @@
     <script src="export.js"></script>
     <script src="reset.js"></script>
     <script src="help.js"></script>
+    <script src="edit-fix.js"></script>
+    <script src="add-todo-fix.js"></script>
+    <script src="edit-enter-fix.js"></script>
+    <script src="escape-fix.js"></script>
+    <script src="toggle-fix.js"></script>
+    <script src="direct-toggle-fix.js"></script>
+    <script src="inline-toggle-fix.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
