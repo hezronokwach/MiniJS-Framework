@@ -61,6 +61,15 @@
                 state = this.deepMerge(state, updates);
             }
             
+            // Track last action and added todo ID for UI effects
+            this._lastAction = actionType;
+            if (actionType === 'ADD_TODO' && updates.todos) {
+                const newIds = Object.keys(updates.todos).filter(id => !prevState.todos[id]);
+                if (newIds.length > 0) {
+                    this._lastAddedId = parseInt(newIds[0]);
+                }
+            }
+            
             // Save to localStorage
             this.saveToStorage();
             
