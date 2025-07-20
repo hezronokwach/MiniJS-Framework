@@ -4,6 +4,8 @@
 
 MiniJS is a lightweight, custom JavaScript framework built from scratch with no external dependencies. It provides core features needed for modern web applications including DOM abstraction, state management, event handling, and routing.
 
+[Complete Framework Documentation](FRAMEWORK_COMPLETE.md)
+
 ## Features
 
 - **DOM Abstraction Layer**: Simplified DOM manipulation through JavaScript objects
@@ -47,23 +49,29 @@ Returns framework information including version and module status.
 
 ## Framework Modules
 
-### DOM Abstraction (Coming Soon)
+### DOM Abstraction
 - Element creation and manipulation
 - Attribute management
 - Element nesting and hierarchy
 - Text content management
 
-### Event Handling (Coming Soon)
+[Complete DOM Module Documentation](DOM_MODULE_COMPLETE.md)
+
+### Event Handling
 - Custom event binding
 - Event delegation
 - Event cleanup and unbinding
 - Integration with state management
 
-### State Management (Coming Soon)
+[Complete Events Module Documentation](EVENTS_MODULE_COMPLETE.md)
+
+### State Management
 - Global state store
 - State subscriptions
 - Reactive updates
 - Local storage persistence
+
+[Complete State Module Documentation](STATE_MODULE_COMPLETE.md)
 
 ### Routing
 - Hash-based routing for single-page applications
@@ -72,6 +80,8 @@ Returns framework information including version and module status.
 - Route change event handling
 - Integration with state management
 - Browser history support
+
+[Complete Routing Module Documentation](ROUTING_MODULE_COMPLETE.md)
 
 #### Overview
 The MiniJS Routing module provides a simple, hash-based routing system for single-page applications. It synchronizes application state with URL changes, enabling navigation between views (e.g., TodoMVC filters: All, Active, Completed) without page reloads.
