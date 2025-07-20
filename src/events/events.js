@@ -19,7 +19,7 @@
             const delegatedEventTypes = [
                 'click', 'input', 'submit', 'keydown', 'keyup', 'keypress',
                 'change', 'focus', 'blur', 'mouseenter', 'mouseleave',
-                'mousedown', 'mouseup', 'touchstart', 'touchend'
+                'mousedown', 'mouseup', 'touchstart', 'touchend', 'dblclick'
             ];
             
             delegatedEventTypes.forEach(eventType => {
