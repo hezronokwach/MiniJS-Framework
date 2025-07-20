@@ -146,20 +146,49 @@
                     const li = e.target.closest('li');
                     const id = parseInt(li.dataset.id);
                     startEditing(id);
+                    
+                    // Prevent double click from selecting text in other elements
+                    e.preventDefault();
+                }
+            }
+        });
+        
+        // Support single click on edit icon
+        events.bind(todoList, {
+            click: function(e) {
+                if (e.target.classList.contains('edit-icon')) {
+                    const li = e.target.closest('li');
+                    const id = parseInt(li.dataset.id);
+                    startEditing(id);
+                }
+            }
+        });
+        
+        // Support keyboard activation for label and edit icon
+        events.bind(todoList, {
+            keydown: function(e) {
+                if ((e.target.tagName === 'LABEL' || e.target.classList.contains('edit-icon')) && 
+                    (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault(); // Prevent page scroll on space
+                    const li = e.target.closest('li');
+                    const id = parseInt(li.dataset.id);
+                    startEditing(id);
                 }
             }
         });
         
         // Save edited todo
         events.bind(todoList, {
-            keyup: function(e) {
+            keydown: function(e) { // Use keydown for better responsiveness
                 if (e.target.classList.contains('edit')) {
                     const li = e.target.closest('li');
                     const id = parseInt(li.dataset.id);
                     
                     if (e.key === 'Enter') {
+                        e.preventDefault(); // Prevent adding a newline
                         finishEditing(id, e.target.value.trim());
                     } else if (e.key === 'Escape') {
+                        e.preventDefault(); // Prevent browser back
                         cancelEditing();
                     }
                 }
@@ -168,7 +197,13 @@
                 if (e.target.classList.contains('edit')) {
                     const li = e.target.closest('li');
                     const id = parseInt(li.dataset.id);
-                    finishEditing(id, e.target.value.trim());
+                    
+                    // Only save if we're still in editing mode
+                    // This prevents conflicts with Escape key
+                    const state = window.MiniJSState;
+                    if (state.getState().editingId === id) {
+                        finishEditing(id, e.target.value.trim());
+                    }
                 }
             }
         });
@@ -279,13 +314,27 @@
                 }, 1000);
             }
             
+            // Show edited indicator if this todo was just edited
+            if (lastAction === 'EDIT_TODO' && state._lastEditedId === todo.id) {
+                li.classList.add('edited');
+                // Remove edited class after animation completes
+                setTimeout(() => {
+                    li.classList.remove('edited');
+                }, 1000);
+            }
+            
             li.innerHTML = `
                 <div class="view">
-                    <input class="toggle" type="checkbox" ${todo.completed ? 'checked' : ''}>
-                    <label>${todo.title}</label>
-                    <button class="destroy"></button>
+                    <input class="toggle" type="checkbox" ${todo.completed ? 'checked' : ''} 
+                           aria-label="${todo.completed ? 'Mark as incomplete' : 'Mark as complete'}">
+                    <label title="Double-click to edit" tabindex="0">${todo.title}</label>
+                    <button class="destroy" title="Delete todo" aria-label="Delete todo"></button>
+                    <span class="edit-icon" title="Edit todo" tabindex="0" role="button" 
+                          aria-label="Edit todo">${todo.completed ? '' : '✏️'}</span>
                 </div>
-                <input class="edit" value="${todo.title}">
+                <input class="edit" value="${todo.title}" 
+                       placeholder="Edit todo and press Enter" 
+                       aria-label="Edit todo item">
             `;
             
             todoList.appendChild(li);
@@ -481,18 +530,47 @@
      */
     function startEditing(id) {
         const state = window.MiniJSState;
+        const currentState = state.getState();
+        
+        // Don't allow editing completed todos (optional UX choice)
+        const todo = currentState.todos[id];
+        if (!todo) return;
+        
+        // If already editing another todo, save it first
+        if (currentState.editingId && currentState.editingId !== id) {
+            const previousEditInput = document.querySelector(`li[data-id="${currentState.editingId}"] .edit`);
+            if (previousEditInput) {
+                finishEditing(currentState.editingId, previousEditInput.value.trim());
+            }
+        }
+        
+        // Set editing state
         state.setState({
             editingId: id
-        });
+        }, 'START_EDITING');
         
         // Focus the edit input
         setTimeout(() => {
             const editInput = document.querySelector(`li[data-id="${id}"] .edit`);
             if (editInput) {
                 editInput.focus();
-                editInput.selectionStart = editInput.selectionEnd = editInput.value.length;
+                editInput.selectionStart = 0;
+                editInput.selectionEnd = editInput.value.length;
+                
+                // Announce for screen readers
+                const announcer = document.getElementById('a11y-announcer') || 
+                    document.createElement('div');
+                if (!announcer.id) {
+                    announcer.id = 'a11y-announcer';
+                    announcer.setAttribute('aria-live', 'polite');
+                    announcer.className = 'sr-only';
+                    document.body.appendChild(announcer);
+                }
+                announcer.textContent = `Editing todo: ${todo.title}. Press Enter to save or Escape to cancel.`;
             }
         }, 0);
+        
+        console.log(`Editing todo: "${todo.title}" (ID: ${id})`);
     }
 
     /**
@@ -509,22 +587,55 @@
         const todo = currentState.todos[id];
         if (!todo) return;
         
+        const oldTitle = todo.title;
+        
         if (newTitle === '') {
             // Delete todo if title is empty
             deleteTodo(id);
-        } else {
-            // Update todo title
+            console.log(`Todo deleted (empty title): ID ${id}`);
+        } else if (newTitle !== oldTitle) {
+            // Only update if title changed
             const newTodos = { ...currentState.todos };
             newTodos[id] = {
                 ...todo,
-                title: newTitle
+                title: newTitle,
+                updatedAt: Date.now() // Track when it was edited
             };
             
             state.setState({
                 todos: newTodos,
+                editingId: null,
+                lastEditedId: id // Track the last edited todo
+            }, 'EDIT_TODO');
+            
+            console.log(`Todo edited: "${oldTitle}" → "${newTitle}" (ID: ${id})`);
+            
+            // Add a temporary class to show the todo was edited
+            setTimeout(() => {
+                const li = document.querySelector(`li[data-id="${id}"]`);
+                if (li) {
+                    li.classList.add('edited');
+                    setTimeout(() => {
+                        li.classList.remove('edited');
+                    }, 1000);
+                }
+            }, 0);
+        } else {
+            // No changes, just exit edit mode
+            state.setState({
                 editingId: null
             });
+            
+            console.log(`Todo edit cancelled (no changes): ID ${id}`);
         }
+        
+        // Return focus to the todo item label
+        setTimeout(() => {
+            const label = document.querySelector(`li[data-id="${id}"] label`);
+            if (label) {
+                label.focus();
+            }
+        }, 0);
     }
 
     /**
@@ -532,9 +643,24 @@
      */
     function cancelEditing() {
         const state = window.MiniJSState;
+        const currentState = state.getState();
+        const editingId = currentState.editingId;
+        
+        if (!editingId) return;
+        
         state.setState({
             editingId: null
-        });
+        }, 'CANCEL_EDIT');
+        
+        console.log(`Todo edit cancelled: ID ${editingId}`);
+        
+        // Return focus to the todo item label
+        setTimeout(() => {
+            const label = document.querySelector(`li[data-id="${editingId}"] label`);
+            if (label) {
+                label.focus();
+            }
+        }, 0);
     }
 
 })();
