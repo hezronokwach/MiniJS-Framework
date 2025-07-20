@@ -7,7 +7,7 @@
  * 
  * @module dom/index
  * @version 1.0.0
- * @author MiniJS Framework Team
+ * @author PoSSH Framework Team
  */
 
 (function() {

@@ -3,7 +3,7 @@
  * A lightweight JavaScript framework with DOM abstraction, state management, event handling, and routing
  * 
  * @version 1.0.0
- * @author MiniJS Framework Team
+ * @author PoSSH Framework Team
  */
 
 (function(global) {
