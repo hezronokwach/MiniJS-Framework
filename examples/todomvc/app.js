@@ -254,6 +254,18 @@
             }
         });
         
+        // Add direct event listeners as backup
+        document.addEventListener('dblclick', function(e) {
+            if (e.target.tagName === 'LABEL' && e.target.closest('.todo-list')) {
+                const li = e.target.closest('li');
+                if (li) {
+                    const id = parseInt(li.dataset.id);
+                    startEditing(id);
+                    e.preventDefault();
+                }
+            }
+        });
+        
         // Support single click on edit icon
         events.bind(todoList, {
             click: function(e) {
@@ -460,15 +472,19 @@
             li.innerHTML = `
                 <div class="view">
                     <input class="toggle" type="checkbox" ${todo.completed ? 'checked' : ''} 
-                           aria-label="${todo.completed ? 'Mark as incomplete' : 'Mark as complete'}">
-                    <label title="Double-click to edit" tabindex="0">${todo.title}</label>
+                           aria-label="${todo.completed ? 'Mark as incomplete' : 'Mark as complete'}"
+                           onclick="if(typeof toggleTodo === 'function') { toggleTodo(${todo.id}); return false; }">
+                    <label title="Double-click to edit" tabindex="0" 
+                           ondblclick="this.closest('li').classList.add('editing'); this.closest('li').querySelector('.edit').focus();"
+                           data-action="edit">${todo.title}</label>
                     <button class="destroy" title="Delete todo" aria-label="Delete todo"></button>
                     <span class="edit-icon" title="Edit todo" tabindex="0" role="button" 
                           aria-label="Edit todo">${todo.completed ? '' : '✏️'}</span>
                 </div>
                 <input class="edit" value="${todo.title}" 
                        placeholder="Edit todo and press Enter" 
-                       aria-label="Edit todo item">
+                       aria-label="Edit todo item"
+                       onkeydown="if(event.key === 'Enter') { event.preventDefault(); const id = parseInt(this.closest('li').dataset.id); if(typeof finishEditing === 'function') { finishEditing(id, this.value.trim()); } } else if(event.key === 'Escape') { event.preventDefault(); if(typeof cancelEditing === 'function') { cancelEditing(); } else { this.closest('li').classList.remove('editing'); } }">
             `;
             
             todoList.appendChild(li);
@@ -545,6 +561,8 @@
      * @returns {number|null} - ID of the new todo or null if not added
      */
     function addTodo(title) {
+        // Make function available globally
+        window.addTodo = addTodo;
         // Validate input
         if (!title || typeof title !== 'string') {
             return null;
@@ -596,6 +614,8 @@
      * @param {number} id - Todo ID
      */
     function toggleTodo(id) {
+        // Make function available globally
+        window.toggleTodo = toggleTodo;
         const state = window.MiniJSState;
         const currentState = state.getState();
         const todo = currentState.todos[id];
@@ -692,6 +712,8 @@
      * Clear all completed todos
      */
     function clearCompletedTodos() {
+        // Make function available globally
+        window.clearCompletedTodos = clearCompletedTodos;
         const state = window.MiniJSState;
         const currentState = state.getState();
         const newTodos = { ...currentState.todos };
@@ -780,6 +802,8 @@
      * @param {string} newTitle - New todo title
      */
     function finishEditing(id, newTitle) {
+        // Make function available globally
+        window.finishEditing = finishEditing;
         const state = window.MiniJSState;
         const currentState = state.getState();
         
@@ -843,6 +867,8 @@
      * Cancel editing
      */
     function cancelEditing() {
+        // Make function available globally
+        window.cancelEditing = cancelEditing;
         const state = window.MiniJSState;
         const currentState = state.getState();
         const editingId = currentState.editingId;
