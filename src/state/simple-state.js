@@ -127,9 +127,16 @@
         // Save state to localStorage
         saveToStorage: function() {
             try {
-                localStorage.setItem('miniJS-todos', JSON.stringify(state));
+                const stateToSave = {
+                    todos: state.todos,
+                    filter: state.filter,
+                    nextId: state.nextId
+                };
+                localStorage.setItem('miniJS-todos', JSON.stringify(stateToSave));
+                return true;
             } catch (error) {
                 console.error('Failed to save state to localStorage:', error);
+                return false;
             }
         },
         
@@ -138,10 +145,20 @@
             try {
                 const savedState = localStorage.getItem('miniJS-todos');
                 if (savedState) {
-                    state = JSON.parse(savedState);
+                    const parsedState = JSON.parse(savedState);
+                    
+                    // Validate the loaded state
+                    if (parsedState && typeof parsedState === 'object') {
+                        // Merge with initial state to ensure all required properties exist
+                        state = this.deepMerge(initialState, parsedState);
+                        console.log('State loaded from localStorage');
+                        return true;
+                    }
                 }
+                return false;
             } catch (error) {
                 console.error('Failed to load state from localStorage:', error);
+                return false;
             }
         },
         
