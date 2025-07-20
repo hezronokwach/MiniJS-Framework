@@ -90,6 +90,17 @@
             }
         });
         
+        // Also handle input event for better mobile support
+        events.onInput(newTodoInput, function(e) {
+            if (e.originalEvent.inputType === 'insertLineBreak') {
+                const value = e.target.value.trim();
+                if (value) {
+                    addTodo(value);
+                    e.target.value = '';
+                }
+            }
+        });
+        
         // Toggle all
         const toggleAll = document.querySelector('.toggle-all');
         events.onChange(toggleAll, function(e) {
@@ -215,6 +226,14 @@
     function renderApp() {
         const state = window.MiniJSState;
         renderTodos(state.getState().todos);
+        
+        // Focus the new todo input
+        setTimeout(() => {
+            const newTodoInput = document.querySelector('.new-todo');
+            if (newTodoInput) {
+                newTodoInput.focus();
+            }
+        }, 100);
     }
 
     /**
@@ -228,7 +247,7 @@
         
         if (!todoList) return;
         
-        // Clear existing todos
+        // Clear existing todos and empty state message
         todoList.innerHTML = '';
         
         // Filter todos
@@ -238,12 +257,27 @@
             return true; // 'all' filter
         });
         
+        // Track newly added todos
+        const lastAction = state._lastAction || '';
+        const lastAddedId = state._lastAddedId || null;
+        
         // Create todo elements
         filteredTodos.forEach(todo => {
             const li = document.createElement('li');
             li.dataset.id = todo.id;
+            
+            // Apply appropriate classes
             if (todo.completed) li.classList.add('completed');
             if (state.getState().editingId === todo.id) li.classList.add('editing');
+            
+            // Highlight newly added todos
+            if (lastAction === 'ADD_TODO' && todo.id === lastAddedId) {
+                li.classList.add('highlight');
+                // Remove highlight after animation completes
+                setTimeout(() => {
+                    li.classList.remove('highlight');
+                }, 1000);
+            }
             
             li.innerHTML = `
                 <div class="view">
@@ -295,30 +329,70 @@
         if (toggleAll) {
             toggleAll.checked = todoCount > 0 && completedCount === todoCount;
         }
+        
+        // Show welcome message if no todos
+        const todoList = document.querySelector('.todo-list');
+        if (todoList && todoCount === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'empty-state';
+            emptyMessage.innerHTML = `
+                <p>Your todo list is empty!</p>
+                <p>Add a new todo by typing in the input field above and pressing Enter.</p>
+            `;
+            todoList.appendChild(emptyMessage);
+        }
     }
 
     /**
      * Add a new todo
      * @param {string} title - Todo title
+     * @returns {number|null} - ID of the new todo or null if not added
      */
     function addTodo(title) {
+        // Validate input
+        if (!title || typeof title !== 'string') {
+            return null;
+        }
+        
+        const trimmedTitle = title.trim();
+        if (trimmedTitle === '') {
+            return null;
+        }
+        
         const state = window.MiniJSState;
         const currentState = state.getState();
         const id = currentState.nextId;
         
+        // Create new todo object
         const newTodo = {
             id: id,
-            title: title,
-            completed: false
+            title: trimmedTitle,
+            completed: false,
+            createdAt: Date.now()
         };
         
+        // Add to todos collection
         const newTodos = { ...currentState.todos };
         newTodos[id] = newTodo;
         
+        // Update state
         state.setState({
             todos: newTodos,
             nextId: id + 1
-        });
+        }, 'ADD_TODO');
+        
+        // Log for debugging
+        console.log(`Todo added: "${trimmedTitle}" (ID: ${id})`);
+        
+        // Scroll to bottom if needed to show new todo
+        setTimeout(() => {
+            const todoList = document.querySelector('.todo-list');
+            if (todoList) {
+                todoList.scrollTop = todoList.scrollHeight;
+            }
+        }, 0);
+        
+        return id; // Return the ID of the new todo
     }
 
     /**
