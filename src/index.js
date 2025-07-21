@@ -27,11 +27,21 @@
             console.log('🚀 MiniJS Framework v' + this.version + ' initializing...');
 
             // Initialize core modules when they're implemented
-            if (this.core) this.core.init();
-            if (this.dom) this.dom.init();
-            if (this.events) this.events.init();
-            if (this.state) this.state.init();
-            if (this.routing) this.routing.init();
+            if (this.core && typeof this.core.init === 'function') {
+                this.core.init();
+            }
+            if (this.dom && typeof this.dom.init === 'function') {
+                this.dom.init();
+            }
+            if (this.events && typeof this.events.init === 'function') {
+                this.events.init();
+            }
+            if (this.state && typeof this.state.init === 'function') {
+                this.state.init();
+            }
+            if (this.routing && typeof this.routing.init === 'function') {
+                this.routing.init();
+            }
 
             console.log('✅ MiniJS Framework initialized successfully!');
             return this;
