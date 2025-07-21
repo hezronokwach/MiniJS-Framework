@@ -16,48 +16,18 @@
     <section class="todoapp">
         <header class="header">
             <h1>todos</h1>
-            <input class="new-todo" placeholder="What needs to be done? (Press Enter to add)" autofocus
-                   onkeydown="if(event.key === 'Enter' && this.value.trim()) { if(typeof addTodo === 'function') { addTodo(this.value.trim()); this.value = ''; event.preventDefault(); } }">
-            <span class="sr-only">Press Enter to add a new todo</span>
+            <input class="new-todo" placeholder="What needs to be done? (Press Enter to add)" autofocus>
         </header>
-        
-        <!-- This section should be hidden by default and shown when there are todos -->
         <section class="main">
             <input id="toggle-all" class="toggle-all" type="checkbox">
             <label for="toggle-all">Mark all as complete</label>
-            <ul class="todo-list">
-                <!-- Todo items will be inserted here dynamically -->
-                <!-- Example of a completed todo item structure:
-                <li data-id="1" class="completed">
-                    <div class="view">
-                        <input class="toggle" type="checkbox" checked>
-                        <label>Completed task</label>
-                        <button class="destroy"></button>
-                    </div>
-                    <input class="edit" value="Completed task">
-                </li>
-                -->
-                <!-- Example of an active todo item structure:
-                <li data-id="2">
-                    <div class="view">
-                        <input class="toggle" type="checkbox">
-                        <label>Active task</label>
-                        <button class="destroy"></button>
-                    </div>
-                    <input class="edit" value="Active task">
-                </li>
-                -->
-            </ul>
+            <ul class="todo-list"></ul>
         </section>
-        
-        <!-- This footer should be hidden by default and shown when there are todos -->
-        <footer class="footer hidden">
-            <!-- This should be `0 items left` by default -->
-            <span class="todo-count"><strong>0</strong> item left</span>
-            <!-- Remove this if you don't implement routing -->
+        <footer class="footer">
+            <span class="todo-count"><strong>0</strong> items left</span>
             <ul class="filters">
                 <li>
-                    <a class="selected" href="#/all">All</a>
+                    <a href="#/all" class="selected">All</a>
                 </li>
                 <li>
                     <a href="#/active">Active</a>
@@ -66,35 +36,31 @@
                     <a href="#/completed">Completed</a>
                 </li>
             </ul>
-            <!-- Hidden if no completed items are left ↓ -->
-            <button class="clear-completed hidden" onclick="if(typeof clearCompletedTodos === 'function') { clearCompletedTodos(); return false; }">Clear completed</button>
+            <button class="clear-completed">Clear completed</button>
         </footer>
     </section>
-    
     <footer class="info">
         <p>Double-click to edit a todo</p>
-        <p>Created with <a href="https://github.com/hezronokwach/MiniJS-Framework">MiniJS Framework</a></p>
+        <p>Created by <a href="#">MiniJS Framework Team</a></p>
         <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+        <p><strong>Keyboard Shortcuts:</strong></p>
+        <p>Ctrl+Alt+R: Reset | Ctrl+Alt+E: Export | F1 or ?: Help</p>
     </footer>
 
     <!-- Load MiniJS Framework Core -->
     <script src="../../src/index.js"></script>
-    
+
     <!-- Load MiniJS Framework DOM Modules -->
     <script src="../../src/dom/element.js"></script>
     <script src="../../src/dom/attributes.js"></script>
     <script src="../../src/dom/manipulation.js"></script>
     <script src="../../src/dom/render.js"></script>
     <script src="../../src/dom/index.js"></script>
-    
+
     <!-- Load Other MiniJS Framework Modules -->
     <script src="../../src/events/events.js"></script>
     <script src="../../src/state/simple-state.js"></script>
     <script src="../../src/routing/router.js"></script>
-    
-    <!-- Emergency fixes -->
-    <script src="emergency-toggle-fix.js"></script>
-    <script src="direct-edit-fix.js"></script>
     
     <!-- TodoMVC Application -->
     <script src="structure-verification.js"></script>
@@ -104,13 +70,6 @@
     <script src="export.js"></script>
     <script src="reset.js"></script>
     <script src="help.js"></script>
-    <script src="edit-fix.js"></script>
-    <script src="add-todo-fix.js"></script>
-    <script src="edit-enter-fix.js"></script>
-    <script src="escape-fix.js"></script>
-    <script src="toggle-fix.js"></script>
-    <script src="direct-toggle-fix.js"></script>
-    <script src="inline-toggle-fix.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
