@@ -63,8 +63,17 @@
         onRouteChange = fn;
     }
 
+    // Initialize the router
+    function init() {
+        console.log('🔄 Router module initialized');
+        // Trigger initial route handling
+        handleRouteChange();
+        return true;
+    }
+
     // Export router API
     const Router = {
+        init,
         registerRoute,
         navigateTo,
         back,
