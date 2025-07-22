@@ -215,10 +215,9 @@
         // Todo list event delegation
         const todoList = document.querySelector('.todo-list');
         if (todoList) {
-            // Handle toggle checkbox clicks
-            todoList.addEventListener('click', function(e) {
+            // Handle toggle checkbox changes
+            todoList.addEventListener('change', function(e) {
                 if (e.target.classList.contains('toggle')) {
-                    e.preventDefault(); // Prevent default checkbox behavior
                     const li = e.target.closest('li');
                     if (li) {
                         const id = parseInt(li.dataset.id);
@@ -239,7 +238,7 @@
                 }
             });
 
-            // Handle double-click to edit
+            // Handle double-click to edit - only on label (text area)
             todoList.addEventListener('dblclick', function(e) {
                 if (e.target.tagName === 'LABEL') {
                     const li = e.target.closest('li');
@@ -563,7 +562,7 @@
         filteredTodos.forEach(todo => {
             const li = document.createElement('li');
             li.dataset.id = todo.id;
-            
+
             // Set classes
             if (todo.completed) {
                 li.classList.add('completed');
@@ -571,7 +570,7 @@
             if (editingId === todo.id) {
                 li.classList.add('editing');
             }
-            
+
             li.innerHTML = `
                 <div class="view">
                     <input class="toggle" type="checkbox" ${todo.completed ? 'checked' : ''}>
@@ -580,6 +579,8 @@
                 </div>
                 <input class="edit" value="${escapeHtml(todo.title)}">
             `;
+
+
             
             todoList.appendChild(li);
         });
