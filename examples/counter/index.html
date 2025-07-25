@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Counter App - MiniJS Framework</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .counter {
+            font-size: 3em;
+            margin: 20px 0;
+            color: #333;
+        }
+        
+        button {
+            font-size: 1.2em;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .stats {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Counter App</h1>
+    <p>A simple counter built with the MiniJS Framework</p>
+    
+    <div class="counter" id="counter">0</div>
+    
+    <div class="controls">
+        <button id="decrement">-</button>
+        <button id="increment">+</button>
+        <button id="reset">Reset</button>
+    </div>
+    
+    <div class="stats" id="stats">
+        <h3>Statistics</h3>
+        <p>Total clicks: <span id="total-clicks">0</span></p>
+        <p>Current value: <span id="current-value">0</span></p>
+    </div>
+
+    <!-- Load MiniJS Framework -->
+    <script src="../../src/index.js"></script>
+    <script src="../../src/dom/element.js"></script>
+    <script src="../../src/dom/attributes.js"></script>
+    <script src="../../src/dom/manipulation.js"></script>
+    <script src="../../src/dom/render.js"></script>
+    <script src="../../src/dom/index.js"></script>
+    <script src="../../src/events/events.js"></script>
+    <script src="../../src/state/simple-state.js"></script>
+    <script src="../../src/routing/router.js"></script>
+    
+    <!-- Counter App -->
+    <script src="app.js"></script>
+</body>
+</html>
