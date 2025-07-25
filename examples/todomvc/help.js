@@ -195,12 +195,34 @@ function addHelpButton() {
     helpButton.className = 'help-button';
     helpButton.textContent = '?';
     helpButton.title = 'Show keyboard shortcuts';
-    helpButton.onclick = showHelp;
+
+    // Use MiniJS Events system
+    if (window.MiniJS && window.MiniJS.events) {
+        window.MiniJS.events.onClick(helpButton, showHelp);
+    } else {
+        // Fallback to onclick if MiniJS Events not available
+        helpButton.onclick = showHelp;
+    }
+
     document.body.appendChild(helpButton);
 }
 
 // Add help button when DOM is loaded
-document.addEventListener('DOMContentLoaded', addHelpButton);
+function initializeHelp() {
+    // Wait for MiniJS Events to be available
+    if (window.MiniJS && window.MiniJS.events) {
+        addHelpButton();
+    } else {
+        // Fallback if MiniJS Events not available yet
+        setTimeout(initializeHelp, 100);
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeHelp);
+} else {
+    initializeHelp();
+}
 
 // Make available globally
 window.showHelp = showHelp;
