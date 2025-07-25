@@ -9,60 +9,28 @@
     let nextId = 1;
 
     // Wait for MiniJS framework to be ready
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Reset app (Ctrl+Alt+R)
-            if (e.ctrlKey && e.altKey && e.key === 'r') {
-                e.preventDefault();
-                if (typeof resetApp === 'function') {
-                    resetApp();
-                    console.log('App reset triggered by keyboard shortcut (Ctrl+Alt+R)');
-                }
-            }
-            
-            // Export todos (Ctrl+Alt+E)
-            if (e.ctrlKey && e.altKey && e.key === 'e') {
-                e.preventDefault();
-                if (typeof exportTodos === 'function') {
-                    exportTodos();
-                    console.log('Todos export triggered by keyboard shortcut (Ctrl+Alt+E)');
-                }
-            }
-            
-            // Show help (F1 or ?)
-            if (e.key === 'F1' || (e.key === '?' && !e.ctrlKey && !e.altKey && !e.shiftKey)) {
-                e.preventDefault();
-                if (typeof showHelp === 'function') {
-                    showHelp();
-                    console.log('Help dialog triggered by keyboard shortcut');
-                }
-            }
-
-            // Global Escape key handler for editing
-            if (e.key === 'Escape') {
-                const editingTodo = document.querySelector('.todo-list li.editing');
-                if (editingTodo) {
-                    e.preventDefault();
-                    cancelEditing();
-                }
-            }
-        });
-
+    function initializeWhenReady() {
         console.log('📝 TodoMVC App initializing...');
-        
+
         if (typeof MiniJS === 'undefined') {
             console.error('❌ MiniJS Framework not found! Please ensure src/index.js is loaded.');
             return;
         }
 
         console.log('Framework info:', MiniJS.getInfo());
-        
+
         // Wait for all modules to be ready
         setTimeout(() => {
             initApp();
         }, 100);
-    });
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeWhenReady);
+    } else {
+        initializeWhenReady();
+    }
 
     /**
      * Initialize the TodoMVC application
@@ -83,16 +51,19 @@
         }
         
         console.log('✅ All modules loaded, initializing app...');
-        
+
         // Initialize state
         initState();
-        
+
+        // Set up global keyboard shortcuts
+        setupGlobalKeyboardShortcuts();
+
         // Set up event handlers
         setupEventHandlers();
-        
+
         // Set up routing
         setupRouting();
-        
+
         // Render initial UI
         renderApp();
         
@@ -150,18 +121,78 @@
     }
 
     /**
+     * Set up global keyboard shortcuts using MiniJS Events
+     */
+    function setupGlobalKeyboardShortcuts() {
+        const events = window.MiniJS.events;
+
+        if (!events) {
+            console.error('❌ MiniJS Events system not available for global shortcuts!');
+            return;
+        }
+
+        // Bind global keyboard shortcuts to document
+        events.onKeydown(document, function(e) {
+            // Reset app (Ctrl+Alt+R)
+            if (e.ctrlKey && e.altKey && e.key === 'r') {
+                e.preventDefault();
+                if (typeof resetApp === 'function') {
+                    resetApp();
+                    console.log('App reset triggered by keyboard shortcut (Ctrl+Alt+R)');
+                }
+            }
+
+            // Export todos (Ctrl+Alt+E)
+            if (e.ctrlKey && e.altKey && e.key === 'e') {
+                e.preventDefault();
+                if (typeof exportTodos === 'function') {
+                    exportTodos();
+                    console.log('Todos export triggered by keyboard shortcut (Ctrl+Alt+E)');
+                }
+            }
+
+            // Show help (F1 or ?)
+            if (e.key === 'F1' || (e.key === '?' && !e.ctrlKey && !e.altKey && !e.shiftKey)) {
+                e.preventDefault();
+                if (typeof showHelp === 'function') {
+                    showHelp();
+                    console.log('Help dialog triggered by keyboard shortcut');
+                }
+            }
+
+            // Global Escape key handler for editing
+            if (e.key === 'Escape') {
+                const editingTodo = document.querySelector('.todo-list li.editing');
+                if (editingTodo) {
+                    e.preventDefault();
+                    cancelEditing();
+                }
+            }
+        });
+
+        console.log('✅ Global keyboard shortcuts set up using MiniJS Events system');
+    }
+
+    /**
      * Set up event handlers
      */
     function setupEventHandlers() {
+        const events = window.MiniJS.events;
+
+        if (!events) {
+            console.error('❌ MiniJS Events system not available!');
+            return;
+        }
+
         // New todo input
         const newTodoInput = document.querySelector('.new-todo');
         if (newTodoInput) {
-            newTodoInput.addEventListener('keydown', function(e) {
+            events.onKeydown(newTodoInput, function(e) {
                 if (e.key === 'Enter') {
-                    const value = this.value.trim();
+                    const value = e.getValue().trim();
                     if (value) {
                         addTodo(value);
-                        this.value = '';
+                        e.setValue('');
                     }
                 }
             });
@@ -170,91 +201,89 @@
         // Toggle all checkbox
         const toggleAllCheckbox = document.querySelector('.toggle-all');
         if (toggleAllCheckbox) {
-            toggleAllCheckbox.addEventListener('change', function() {
-                toggleAllTodos(this.checked);
+            events.onChange(toggleAllCheckbox, function(e) {
+                toggleAllTodos(e.target.checked);
             });
         }
 
-        // Clear completed button - use event delegation
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('clear-completed')) {
+        // Clear completed button
+        const clearCompletedBtn = document.querySelector('.clear-completed');
+        if (clearCompletedBtn) {
+            events.onClick(clearCompletedBtn, function(e) {
                 e.preventDefault();
                 clearCompletedTodos();
-            }
-        });
+            });
+        }
 
         // Filter links
-        document.addEventListener('click', function(e) {
-            if (e.target.matches('.filters a')) {
+        const filterLinks = document.querySelectorAll('.filters a');
+        filterLinks.forEach(link => {
+            events.onClick(link, function(e) {
                 e.preventDefault();
                 const href = e.target.getAttribute('href');
                 const filter = href.replace('#/', '');
                 setFilter(filter);
-            }
+            });
         });
 
-        // Todo list event delegation
-        const todoList = document.querySelector('.todo-list');
-        if (todoList) {
-            // Handle toggle checkbox changes
-            todoList.addEventListener('change', function(e) {
-                if (e.target.classList.contains('toggle')) {
-                    const li = e.target.closest('li');
-                    if (li) {
-                        const id = parseInt(li.dataset.id);
-                        toggleTodo(id);
-                    }
-                }
-            });
+        console.log('✅ Event handlers set up using MiniJS Events system');
+    }
 
-            // Handle destroy button clicks
-            todoList.addEventListener('click', function(e) {
-                if (e.target.classList.contains('destroy')) {
+    /**
+     * Bind events to individual todo items
+     */
+    function bindTodoEvents(li, todoId) {
+        const events = window.MiniJS.events;
+
+        if (!events) {
+            console.error('❌ MiniJS Events system not available for todo binding!');
+            return;
+        }
+
+        const toggleCheckbox = li.querySelector('.toggle');
+        const destroyButton = li.querySelector('.destroy');
+        const label = li.querySelector('label');
+        const editInput = li.querySelector('.edit');
+
+        // Handle toggle checkbox
+        if (toggleCheckbox) {
+            events.onChange(toggleCheckbox, function() {
+                toggleTodo(todoId);
+            });
+        }
+
+        // Handle destroy button
+        if (destroyButton) {
+            events.onClick(destroyButton, function(e) {
+                e.preventDefault();
+                deleteTodo(todoId);
+            });
+        }
+
+        // Handle double-click to edit on label
+        if (label) {
+            events.onDoubleClick(label, function() {
+                startEditing(todoId);
+            });
+        }
+
+        // Handle edit input events
+        if (editInput) {
+            events.onKeydown(editInput, function(e) {
+                if (e.key === 'Enter') {
                     e.preventDefault();
-                    const li = e.target.closest('li');
-                    if (li) {
-                        const id = parseInt(li.dataset.id);
-                        deleteTodo(id);
-                    }
+                    const value = e.getValue().trim();
+                    finishEditing(todoId, value);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEditing();
                 }
             });
 
-            // Handle double-click to edit - only on label (text area)
-            todoList.addEventListener('dblclick', function(e) {
-                if (e.target.tagName === 'LABEL') {
-                    const li = e.target.closest('li');
-                    if (li) {
-                        const id = parseInt(li.dataset.id);
-                        startEditing(id);
-                    }
-                }
+            events.onBlur(editInput, function(e) {
+                const value = e.getValue().trim();
+                finishEditing(todoId, value);
             });
-
-            // Handle edit input events
-            todoList.addEventListener('keydown', function(e) {
-                if (e.target.classList.contains('edit')) {
-                    const li = e.target.closest('li');
-                    const id = parseInt(li.dataset.id);
-                    
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const value = e.target.value.trim();
-                        finishEditing(id, value);
-                    } else if (e.key === 'Escape') {
-                        e.preventDefault();
-                        cancelEditing();
-                    }
-                }
-            });
-
-            todoList.addEventListener('blur', function(e) {
-                if (e.target.classList.contains('edit')) {
-                    const li = e.target.closest('li');
-                    const id = parseInt(li.dataset.id);
-                    const value = e.target.value.trim();
-                    finishEditing(id, value);
-                }
-            }, true);
         }
     }
 
@@ -561,8 +590,9 @@
                 <input class="edit" value="${escapeHtml(todo.title)}">
             `;
 
+            // Bind events to the todo elements using MiniJS Events
+            bindTodoEvents(li, todo.id);
 
-            
             todoList.appendChild(li);
         });
         
