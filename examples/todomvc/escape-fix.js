@@ -1,12 +1,20 @@
-// Fix for Escape key to cancel editing
-document.addEventListener('DOMContentLoaded', function() {
+// Fix for Escape key to cancel editing using MiniJS Events
+function initializeEscapeFix() {
+    // Wait for MiniJS Events to be available
+    if (!window.MiniJS || !window.MiniJS.events) {
+        setTimeout(initializeEscapeFix, 100);
+        return;
+    }
+
+    const events = window.MiniJS.events;
+
     // Make cancelEditing function globally available
     if (typeof cancelEditing === 'function') {
         window.cancelEditing = cancelEditing;
     }
-    
-    // Direct event handler for Escape key
-    document.addEventListener('keydown', function(e) {
+
+    // Direct event handler for Escape key using MiniJS Events
+    events.onKeydown(document, function(e) {
         if (e.key === 'Escape') {
             const editInput = document.querySelector('.todo-list li.editing .edit');
             if (editInput) {
@@ -71,7 +79,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update when DOM changes
     const observer = new MutationObserver(updateEditInputs);
     observer.observe(document.body, { childList: true, subtree: true });
-    
+
     // Initial update
     updateEditInputs();
-});
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeEscapeFix);
+} else {
+    initializeEscapeFix();
+}
