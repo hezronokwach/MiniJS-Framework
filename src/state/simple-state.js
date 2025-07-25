@@ -1,13 +1,13 @@
 /**
  * MiniJS Framework - Simple State Module
- * 
- * A lightweight state management system for TodoMVC application that provides:
+ *
+ * A lightweight, generic state management system that provides:
  * - Centralized state container
  * - Immutable state updates
  * - Subscription system for state changes
- * - Local storage persistence
+ * - Configurable local storage persistence
  * - Deep object merging
- * 
+ *
  * @module state/simple-state
  * @version 1.0.0
  * @authors Hezron, Phillip, Stephen and Shisia
@@ -17,31 +17,24 @@
     'use strict';
 
     /**
-     * Default initial state structure
+     * Default configuration for state management
      * @type {Object}
-     * @property {Object} todos - Collection of todo items indexed by ID
-     * @property {string} filter - Current filter (all, active, completed)
-     * @property {number} nextId - Next available ID for new todos
-     * @property {number|null} editingId - ID of todo currently being edited, or null
      */
-    const initialState = {
-        todos: {},
-        filter: 'all',
-        nextId: 1,
-        editingId: null
+    const defaultConfig = {
+        initialState: {},
+        storageKey: 'miniJS-state',
+        enablePersistence: true,
+        enableLogging: false
     };
 
+    /** @type {Object} Current configuration */
+    let config = { ...defaultConfig };
+
     /** @type {Object} Current application state */
-    let state = { ...initialState };
+    let state = {};
 
     /** @type {Array} Collection of subscriber callbacks */
     const subscribers = [];
-
-    /**
-     * Storage key for persisting state
-     * @const {string}
-     */
-    const STORAGE_KEY = 'miniJS-todos';
 
     /**
      * Checks if localStorage is available
@@ -64,20 +57,35 @@
      */
     const stateManager = {
         /**
-         * Initializes the state module
+         * Initializes the state module with configuration
+         * @param {Object} userConfig - Configuration options
+         * @param {Object} userConfig.initialState - Initial state object
+         * @param {string} userConfig.storageKey - Key for localStorage persistence
+         * @param {boolean} userConfig.enablePersistence - Whether to persist state
+         * @param {boolean} userConfig.enableLogging - Whether to log state changes
          * @returns {Object} The state manager instance for chaining
          */
-        init: function() {
-            console.log('🔄 State module initialized');
-            
-            // Load from localStorage if available
-            this.loadFromStorage();
-            
+        init: function(userConfig = {}) {
+            // Merge user config with defaults
+            config = { ...defaultConfig, ...userConfig };
+
+            // Set initial state
+            state = { ...config.initialState };
+
+            if (config.enableLogging) {
+                console.log('🔄 State module initialized with config:', config);
+            }
+
+            // Load from localStorage if persistence is enabled
+            if (config.enablePersistence) {
+                this.loadFromStorage();
+            }
+
             // Attach to MiniJS if available
             if (window.MiniJS) {
                 window.MiniJS.state = this;
             }
-            
+
             return this;
         },
         
@@ -133,14 +141,8 @@
                 state = this.deepMerge(state, updates);
             }
             
-            // Track metadata for UI effects
+            // Track last action for debugging
             this._lastAction = actionType;
-            if (actionType === 'ADD_TODO' && updates.todos) {
-                const newIds = Object.keys(updates.todos).filter(id => !prevState.todos[id]);
-                if (newIds.length > 0) {
-                    this._lastAddedId = parseInt(newIds[0], 10);
-                }
-            }
             
             // Persist state changes
             this.saveToStorage();
@@ -227,18 +229,12 @@
          * @returns {boolean} True if save was successful
          */
         saveToStorage: function() {
-            if (!isStorageAvailable()) {
+            if (!config.enablePersistence || !isStorageAvailable()) {
                 return false;
             }
-            
+
             try {
-                // Only save essential state data
-                const stateToSave = {
-                    todos: state.todos,
-                    filter: state.filter,
-                    nextId: state.nextId
-                };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+                localStorage.setItem(config.storageKey, JSON.stringify(state));
                 return true;
             } catch (error) {
                 console.error('Failed to save state to localStorage:', error);
@@ -251,28 +247,23 @@
          * @returns {boolean} True if load was successful
          */
         loadFromStorage: function() {
-            if (!isStorageAvailable()) {
+            if (!config.enablePersistence || !isStorageAvailable()) {
                 return false;
             }
-            
+
             try {
-                const savedState = localStorage.getItem(STORAGE_KEY);
+                const savedState = localStorage.getItem(config.storageKey);
                 if (!savedState) return false;
-                
+
                 const parsedState = JSON.parse(savedState);
-                
+
                 // Validate the loaded state
                 if (!parsedState || typeof parsedState !== 'object') {
                     return false;
                 }
-                
-                // Validate todos structure if present
-                if (parsedState.todos && typeof parsedState.todos !== 'object') {
-                    return false;
-                }
-                
+
                 // Merge with initial state to ensure all required properties exist
-                state = this.deepMerge(initialState, parsedState);
+                state = this.deepMerge(config.initialState, parsedState);
                 return true;
             } catch (error) {
                 console.error('Failed to load state from localStorage:', error);
@@ -285,25 +276,31 @@
          * @returns {Object} The reset state
          */
         reset: function() {
-            state = { ...initialState };
+            state = { ...config.initialState };
             this.saveToStorage();
             this.notifySubscribers({}, state, 'RESET');
             return state;
         },
-        
+
         /**
-         * Gets statistics about the current state
+         * Gets basic statistics about the current state
          * @returns {Object} Statistics object
          */
         getStats: function() {
             return {
-                todoCount: Object.keys(state.todos || {}).length,
-                activeCount: Object.values(state.todos || {}).filter(todo => !todo.completed).length,
-                completedCount: Object.values(state.todos || {}).filter(todo => todo.completed).length,
+                stateKeys: Object.keys(state),
                 subscriberCount: subscribers.length,
-                currentFilter: state.filter,
-                nextId: state.nextId
+                storageEnabled: config.enablePersistence,
+                storageKey: config.storageKey
             };
+        },
+
+        /**
+         * Gets the current configuration
+         * @returns {Object} Current configuration
+         */
+        getConfig: function() {
+            return { ...config };
         }
     };
 
