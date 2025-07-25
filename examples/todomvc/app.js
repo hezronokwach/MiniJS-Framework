@@ -108,42 +108,28 @@
      * Initialize application state
      */
     function initState() {
-        state = window.MiniJSState;
-
-        if (!state) {
-            console.error('❌ MiniJSState not available!');
-            return;
-        }
-        
-        // Load todos from localStorage
-        let todosLoaded = false;
-        if (typeof loadTodos === 'function') {
-            const savedTodos = loadTodos();
-            if (savedTodos && Object.keys(savedTodos).length > 0) {
-                const maxId = Math.max(...Object.keys(savedTodos).map(id => parseInt(id)));
-                nextId = maxId + 1;
-                
-                state.setState({
-                    todos: savedTodos,
-                    nextId: nextId,
-                    filter: 'all',
-                    editingId: null
-                });
-                todosLoaded = true;
-            }
-        }
-        
-        // Initialize with empty state if no todos were loaded
-        if (!todosLoaded) {
-            state.setState({
+        // Initialize the state management system with TodoMVC-specific configuration
+        const stateConfig = {
+            initialState: {
                 todos: {},
                 nextId: 1,
                 filter: 'all',
                 editingId: null
-            });
-            nextId = 1;
+            },
+            storageKey: 'miniJS-todos',
+            enablePersistence: true,
+            enableLogging: false
+        };
+
+        // Initialize the state manager
+        if (window.MiniJS && window.MiniJS.state) {
+            window.MiniJS.state.init(stateConfig);
+            state = window.MiniJS.state;
+        } else {
+            console.error('❌ MiniJS state module not available!');
+            return;
         }
-        
+
         // Subscribe to state changes
         state.subscribe(function(newState, prevState, actionType) {
             // For toggle actions, delay the re-render slightly to avoid conflicts
@@ -157,11 +143,6 @@
                 renderTodos(newState.todos);
                 updateFooter(newState.todos, newState.filter);
                 updateToggleAll(newState.todos);
-            }
-
-            // Save to localStorage
-            if (typeof saveTodos === 'function') {
-                saveTodos(newState.todos);
             }
         });
 
