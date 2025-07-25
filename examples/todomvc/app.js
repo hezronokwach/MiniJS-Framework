@@ -184,15 +184,30 @@
             return;
         }
 
-        // New todo input
+        // New todo input - use direct event binding as fallback
         const newTodoInput = document.querySelector('.new-todo');
         if (newTodoInput) {
-            events.onKeydown(newTodoInput, function(e) {
+            // Try MiniJS events first
+            if (events && events.onKeydown) {
+                events.onKeydown(newTodoInput, function(e) {
+                    if (e.key === 'Enter') {
+                        const value = e.getValue().trim();
+                        if (value) {
+                            addTodo(value);
+                            e.setValue('');
+                        }
+                    }
+                });
+            }
+            
+            // Direct fallback event handler
+            newTodoInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
-                    const value = e.getValue().trim();
+                    const value = this.value.trim();
                     if (value) {
                         addTodo(value);
-                        e.setValue('');
+                        this.value = '';
+                        e.preventDefault();
                     }
                 }
             });
