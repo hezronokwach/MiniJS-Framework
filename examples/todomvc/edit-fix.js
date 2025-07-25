@@ -1,7 +1,15 @@
-// Fix for double-click editing
-document.addEventListener('DOMContentLoaded', function() {
-    // Direct event handler for double-click on labels
-    document.body.addEventListener('dblclick', function(e) {
+// Fix for double-click editing using MiniJS Events
+function initializeEditFix() {
+    // Wait for MiniJS Events to be available
+    if (!window.MiniJS || !window.MiniJS.events) {
+        setTimeout(initializeEditFix, 100);
+        return;
+    }
+
+    const events = window.MiniJS.events;
+
+    // Direct event handler for double-click on labels using MiniJS Events
+    events.onDoubleClick(document.body, function(e) {
         if (e.target.tagName === 'LABEL' && e.target.closest('.todo-list')) {
             const li = e.target.closest('li');
             if (li) {
@@ -25,4 +33,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-});
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeEditFix);
+} else {
+    initializeEditFix();
+}
