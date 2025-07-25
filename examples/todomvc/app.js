@@ -284,10 +284,30 @@
 
         // Handle edit input events
         if (editInput) {
-            events.onKeydown(editInput, function(e) {
+            // Try MiniJS events first
+            if (events && events.onKeydown) {
+                events.onKeydown(editInput, function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const value = e.getValue().trim();
+                        finishEditing(todoId, value);
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        cancelEditing();
+                    }
+                });
+
+                events.onBlur(editInput, function(e) {
+                    const value = e.getValue().trim();
+                    finishEditing(todoId, value);
+                });
+            }
+            
+            // Direct fallback event handlers
+            editInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    const value = e.getValue().trim();
+                    const value = this.value.trim();
                     finishEditing(todoId, value);
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
@@ -295,8 +315,8 @@
                 }
             });
 
-            events.onBlur(editInput, function(e) {
-                const value = e.getValue().trim();
+            editInput.addEventListener('blur', function(e) {
+                const value = this.value.trim();
                 finishEditing(todoId, value);
             });
         }
