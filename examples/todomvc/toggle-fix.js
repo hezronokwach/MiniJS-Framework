@@ -1,5 +1,12 @@
-// Fix for toggle and clear completed functionality
-document.addEventListener('DOMContentLoaded', function() {
+// Fix for toggle and clear completed functionality using MiniJS Events
+function initializeToggleFix() {
+    // Wait for MiniJS Events to be available
+    if (!window.MiniJS || !window.MiniJS.events) {
+        setTimeout(initializeToggleFix, 100);
+        return;
+    }
+
+    const events = window.MiniJS.events;
     // Make toggle and clear completed functions globally available
     function makeGlobalFunctions() {
         if (typeof toggleTodo === 'function') {
@@ -15,8 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
     makeGlobalFunctions();
     setTimeout(makeGlobalFunctions, 500);
     
-    // Direct event handler for toggle checkboxes
-    document.body.addEventListener('click', function(e) {
+    // Direct event handler for toggle checkboxes using MiniJS Events
+    events.onClick(document.body, function(e) {
         // Handle toggle checkbox clicks
         if (e.target.classList.contains('toggle')) {
             const li = e.target.closest('li');
@@ -115,7 +122,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update handlers when DOM changes
     const observer = new MutationObserver(updateToggleHandlers);
     observer.observe(document.body, { childList: true, subtree: true });
-    
+
     // Initial update
     updateToggleHandlers();
-});
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeToggleFix);
+} else {
+    initializeToggleFix();
+}

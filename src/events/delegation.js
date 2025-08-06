@@ -42,72 +42,22 @@ export class EventDelegation {
         }
     }
 
-    // TodoMVC specific delegation
-    delegateTodoEvents(container) {
-        // Toggle todo completion
-        this.delegate(container, '.todo-toggle', 'change', (event) => {
-            const todoId = event.currentTarget.closest('.todo-item').dataset.id;
-            return event.updateState({
-                todos: {
-                    [todoId]: { completed: event.currentTarget.checked }
-                }
-            });
-        });
-
-        // Start editing todo
-        this.delegate(container, '.todo-text', 'dblclick', (event) => {
-            const todoItem = event.currentTarget.closest('.todo-item');
-            todoItem.classList.add('editing');
-            const input = todoItem.querySelector('.todo-edit');
-            if (input) {
-                input.focus();
-                input.select();
-            }
-        });
-
-        // Delete todo
-        this.delegate(container, '.todo-destroy', 'click', (event) => {
-            const todoId = event.currentTarget.closest('.todo-item').dataset.id;
-            return event.updateState({ deleteTodo: todoId });
-        });
-
-        // Save todo edit
-        this.delegate(container, '.todo-edit', 'blur', (event) => {
-            this.saveTodoEdit(event);
-        });
-
-        this.delegate(container, '.todo-edit', 'keydown', (event) => {
-            if (event.key === 'Enter') {
-                this.saveTodoEdit(event);
-            } else if (event.key === 'Escape') {
-                this.cancelTodoEdit(event);
-            }
+    // Generic helper methods for common patterns
+    delegateFormSubmission(container, formSelector, callback) {
+        this.delegate(container, formSelector, 'submit', (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            callback(formData, event);
         });
     }
 
-    saveTodoEdit(event) {
-        const input = event.currentTarget;
-        const todoItem = input.closest('.todo-item');
-        const todoId = todoItem.dataset.id;
-        const newText = input.value.trim();
-
-        if (newText) {
-            event.updateState({
-                todos: {
-                    [todoId]: { text: newText }
-                }
-            });
-        }
-
-        todoItem.classList.remove('editing');
+    delegateButtonClick(container, buttonSelector, callback) {
+        this.delegate(container, buttonSelector, 'click', callback);
     }
 
-    cancelTodoEdit(event) {
-        const input = event.currentTarget;
-        const todoItem = input.closest('.todo-item');
-        const originalText = todoItem.querySelector('.todo-text').textContent;
-
-        input.value = originalText;
-        todoItem.classList.remove('editing');
+    delegateInputChange(container, inputSelector, callback) {
+        this.delegate(container, inputSelector, 'change', callback);
     }
+
+
 }
